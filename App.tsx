@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';
 import { Onboarding } from './components/Auth/Onboarding';
 import { EmailVerificationSent } from './components/Auth/EmailVerificationSent';
+import { VerifyEmail } from './components/Auth/VerifyEmail';
 import { Layout } from './components/Layout';
 import { StudentDashboard } from './components/Dashboard/StudentDashboard';
 import { LecturerDashboard } from './components/Dashboard/LecturerDashboard';
@@ -20,11 +20,10 @@ import { UserRole } from './types';
 import { supabase } from './services/supabase/client';
 import { getCurrentUserProfile } from './services/supabase/auth';
 
-// Page state type
-type PageState = 'landing' | 'login' | 'register' | 'email-verification' | 'onboarding' | 'dashboard' | 'settings' | '404';
-
-const App: React.FC = () => {
-  const [currentPage, setPage] = useState<PageState>('landing');
+// Auth context wrapper component
+const AppContent: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [userName, setUserName] = useState<string>('User');
   const [userId, setUserId] = useState<string | null>(null);
@@ -85,9 +84,9 @@ const App: React.FC = () => {
       setUserRole(profile.role);
       
       if (!profile.onboardingComplete) {
-        setPage('onboarding');
+        navigate('/onboarding', { replace: true });
       } else {
-        setPage('dashboard');
+        navigate('/dashboard', { replace: true });
       }
     }
   };
@@ -97,7 +96,7 @@ const App: React.FC = () => {
     setUserName(name);
     if (uid) setUserId(uid);
     if (email) setUserEmail(email);
-    setPage('dashboard');
+    navigate('/dashboard');
     setDashboardPage('dashboard');
   };
 
@@ -105,15 +104,15 @@ const App: React.FC = () => {
     setUserName(name);
     setUserEmail(email);
     if (requiresVerification) {
-      setPage('email-verification');
+      navigate('/email-verification');
     } else {
-      setPage('onboarding');
+      navigate('/onboarding');
     }
   };
 
   const handleOnboardingComplete = (role: UserRole) => {
     setUserRole(role);
-    setPage('dashboard');
+    navigate('/dashboard');
   };
 
   const handleLogout = async () => {
@@ -121,25 +120,13 @@ const App: React.FC = () => {
     setUserName('User');
     setUserId(null);
     setUserEmail('');
-    setPage('landing');
+    navigate('/');
     setDashboardPage('dashboard');
   };
   
   // Handle sub-navigation change from Sidebar
   const handleDashboardNavChange = (page: string) => {
-      if (page === 'settings') {
-          setPage('settings'); // Settings is a top-level page state in this specific architecture choice to keep Layout consistent
-          setDashboardPage('settings');
-      } else if (page === 'profile') {
-          setPage('dashboard');
-          setDashboardPage('profile');
-      } else if (page === 'notifications') {
-          setPage('dashboard');
-          setDashboardPage('notifications');
-      } else {
-          setDashboardPage(page);
-          setPage('dashboard'); // Stay in dashboard layout context
-      }
+      setDashboardPage(page);
   };
 
   // Show loading state while checking session
@@ -154,43 +141,44 @@ const App: React.FC = () => {
     );
   }
 
-  // Render logic based on state
-  const renderContent = () => {
-    switch (currentPage) {
-      case 'landing':
-        return <LandingPage onGetStarted={() => setPage('register')} onLogin={() => setPage('login')} />;
+  return (
+    <Routes>
+      <Route path="/" element={<LandingPage onGetStarted={() => navigate('/register')} onLogin={() => navigate('/login')} />} />
       
-      case 'login':
-        return <Login onLogin={handleLogin} onRegisterClick={() => setPage('register')} onBack={() => setPage('landing')} userId={userId} />;
+      <Route path="/login" element={<Login onLogin={handleLogin} onRegisterClick={() => navigate('/register')} onBack={() => navigate('/')} userId={userId} />} />
       
-      case 'register':
-        return <Register onRegister={handleRegisterSuccess} onLoginClick={() => setPage('login')} onBack={() => setPage('landing')} />;
+      <Route path="/register" element={<Register onRegister={handleRegisterSuccess} onLoginClick={() => navigate('/login')} onBack={() => navigate('/')} />} />
       
-      case 'email-verification':
-        return <EmailVerificationSent email={userEmail} onBack={() => setPage('login')} />;
+      <Route path="/email-verification" element={<EmailVerificationSent email={userEmail} onBack={() => navigate('/login')} />} />
       
-      case 'onboarding':
-        return <Onboarding onComplete={handleOnboardingComplete} userId={userId} userName={userName} />;
+      <Route path="/verify-email" element={<VerifyEmail />} />
       
-      case 'dashboard':
-      case 'settings':
-        return (
+      <Route path="/onboarding" element={
+        userId ? (
+          <Onboarding onComplete={handleOnboardingComplete} userId={userId} userName={userName} />
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
+      
+      <Route path="/dashboard" element={
+        userRole ? (
           <Layout 
-            userRole={userRole!}
+            userRole={userRole}
             userName={userName}
             onLogout={handleLogout}
             currentPage={dashboardPage}
             setCurrentPage={handleDashboardNavChange}
           >
             {dashboardPage === 'profile' && (
-                 <ProfilePage userRole={userRole!} userName={userName} />
+                 <ProfilePage userRole={userRole} userName={userName} />
             )}
             {dashboardPage === 'notifications' && (
                  <NotificationsPage />
             )}
             
             {/* Dashboard Role Routing */}
-            {currentPage === 'dashboard' && dashboardPage !== 'profile' && dashboardPage !== 'notifications' && (
+            {dashboardPage !== 'profile' && dashboardPage !== 'notifications' && dashboardPage !== 'settings' && (
                 <>
                     {userRole === UserRole.STUDENT && <StudentDashboard userName={userName} view={dashboardPage} />}
                     {userRole === UserRole.LECTURER && <LecturerDashboard userName={userName} view={dashboardPage} />}
@@ -199,36 +187,25 @@ const App: React.FC = () => {
                 </>
             )}
 
-            {currentPage === 'settings' && (
-                <SettingsPage userRole={userRole!} onLogout={handleLogout} />
+            {dashboardPage === 'settings' && (
+                <SettingsPage userRole={userRole} onLogout={handleLogout} />
             )}
             <AiAssistant />
           </Layout>
-        );
-        
-      case '404':
-        return <NotFound onBack={() => setPage('landing')} />;
+        ) : (
+          <Navigate to="/login" replace />
+        )
+      } />
       
-      default:
-         // Fallback to 404 for unknown states
-        return <NotFound onBack={() => setPage('landing')} />;
-    }
-  };
+      <Route path="*" element={<NotFound onBack={() => navigate('/')} />} />
+    </Routes>
+  );
+};
 
+const App: React.FC = () => {
   return (
     <BrowserRouter>
-        <AnimatePresence mode="wait">
-            <motion.div
-                key={currentPage}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.3 }}
-                className="w-full h-full"
-            >
-                {renderContent()}
-            </motion.div>
-        </AnimatePresence>
+      <AppContent />
     </BrowserRouter>
   );
 };

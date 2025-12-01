@@ -29,7 +29,7 @@ export const isSupabaseConfigured = () => {
   return isConfigured;
 };
 
-// Create Supabase client only when properly configured
+// Create Supabase client - returns null if not properly configured
 const createSupabaseClient = () => {
   if (!isSupabaseConfigured()) {
     console.error('❌ Supabase client creation failed: Missing or invalid VITE_SUPABASE_ANON_KEY');

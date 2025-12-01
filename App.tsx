@@ -38,7 +38,7 @@ const App: React.FC = () => {
 
     // Listen for auth changes only if Supabase is configured
     if (!supabase) {
-      return;
+      return () => {}; // Return empty cleanup function
     }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {

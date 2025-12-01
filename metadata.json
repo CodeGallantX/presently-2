@@ -1,0 +1,8 @@
+{
+  "name": "Presently",
+  "description": "Smart Attendance Management System with AI-powered insights and seamless QR code tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}

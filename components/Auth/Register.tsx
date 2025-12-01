@@ -24,24 +24,17 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
     setLoading(true);
     setError('');
 
-    const result = await signUpWithEmail(email, password, name);
-    
-    if (result.success) {
-      onRegister(name, email, result.requiresEmailVerification || false);
-    } else {
-      // Fallback to demo mode if Supabase is not configured
-      if (result.error?.includes('not configured')) {
-        setTimeout(() => {
-          setLoading(false);
-          onRegister(name, email, false);
-        }, 1000);
-        return;
-      }
+    try {
+      const result = await signUpWithEmail(email, password, name);
       
-      setError(result.error || 'Failed to sign up');
+      if (result.success) {
+        onRegister(name, email, result.requiresEmailVerification || false);
+      } else {
+        setError(result.error || 'Failed to sign up');
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleGoogleSignup = async () => {
@@ -51,15 +44,6 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
     const result = await signInWithGoogle();
     
     if (!result.success) {
-      // Fallback to demo mode if Supabase is not configured
-      if (result.error?.includes('not configured')) {
-        setTimeout(() => {
-          setGoogleLoading(false);
-          onRegister("Google User", "", false);
-        }, 1500);
-        return;
-      }
-      
       setError(result.error || 'Failed to sign up with Google');
       setGoogleLoading(false);
     }

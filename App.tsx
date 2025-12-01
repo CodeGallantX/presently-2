@@ -36,7 +36,11 @@ const App: React.FC = () => {
   useEffect(() => {
     checkSession();
 
-    // Listen for auth changes
+    // Listen for auth changes only if Supabase is configured
+    if (!supabase) {
+      return () => {}; // Return empty cleanup function
+    }
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await loadUserProfile(session.user.id);
@@ -56,6 +60,11 @@ const App: React.FC = () => {
 
   const checkSession = async () => {
     try {
+      if (!supabase) {
+        setIsLoading(false);
+        return;
+      }
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         await loadUserProfile(session.user.id);

@@ -21,7 +21,7 @@ export async function signUpWithEmail(
   password: string,
   fullName: string
 ): Promise<AuthResponse> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return { 
       success: false, 
       error: 'Supabase is not configured. Please set up your environment variables.' 
@@ -72,7 +72,7 @@ export async function signInWithEmail(
   email: string,
   password: string
 ): Promise<AuthResponse> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return { 
       success: false, 
       error: 'Supabase is not configured. Please set up your environment variables.' 
@@ -122,7 +122,7 @@ export async function signInWithEmail(
 
 // Sign in with Google OAuth
 export async function signInWithGoogle(): Promise<AuthResponse> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return { 
       success: false, 
       error: 'Supabase is not configured. Please set up your environment variables.' 
@@ -152,7 +152,7 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
 
 // Sign out
 export async function signOut(): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return { success: true }; // Allow sign out even if not configured
   }
 
@@ -186,7 +186,7 @@ export async function completeOnboarding(
     };
   }
 ): Promise<{ success: boolean; error?: string }> {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return { 
       success: false, 
       error: 'Supabase is not configured. Please set up your environment variables.' 
@@ -254,7 +254,7 @@ export async function completeOnboarding(
 
 // Get current session
 export async function getCurrentSession() {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return null;
   }
 
@@ -270,7 +270,7 @@ export async function getCurrentSession() {
 
 // Get current user profile
 export async function getCurrentUserProfile() {
-  if (!isSupabaseConfigured()) {
+  if (!isSupabaseConfigured() || !supabase) {
     return null;
   }
 

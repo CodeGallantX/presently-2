@@ -25,37 +25,15 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, 
     setLoading(true);
     setError('');
 
-    const result = await signInWithEmail(email, password);
-    
-    if (result.success && result.user) {
-      onLogin(result.user.role, result.user.name, result.user.id, result.user.email);
-    } else {
-      // Fallback to demo mode if Supabase is not configured
-      if (result.error?.includes('not configured')) {
-        // Simulate API call for demo
-        setTimeout(() => {
-          setLoading(false);
-          
-          let role = UserRole.STUDENT;
-          let name = "John Doe";
-
-          if (email.toLowerCase().includes('admin')) {
-            role = UserRole.ADMIN;
-            name = "System Administrator";
-          } else if (email.toLowerCase().includes('prof') || email.toLowerCase().includes('lecturer')) {
-            role = UserRole.LECTURER;
-            name = "Dr. Sarah Johnson";
-          } else if (email.toLowerCase().includes('rep')) {
-            role = UserRole.CLASS_REP;
-            name = "Jane ClassRep";
-          }
-
-          onLogin(role, name);
-        }, 1000);
-        return;
-      }
+    try {
+      const result = await signInWithEmail(email, password);
       
-      setError(result.error || 'Failed to sign in');
+      if (result.success && result.user) {
+        onLogin(result.user.role, result.user.name, result.user.id, result.user.email);
+      } else {
+        setError(result.error || 'Failed to sign in');
+      }
+    } finally {
       setLoading(false);
     }
   };
@@ -67,15 +45,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, 
     const result = await signInWithGoogle();
     
     if (!result.success) {
-      // Fallback to demo mode if Supabase is not configured
-      if (result.error?.includes('not configured')) {
-        setTimeout(() => {
-          setGoogleLoading(false);
-          onLogin(UserRole.STUDENT, "Google User");
-        }, 1500);
-        return;
-      }
-      
       setError(result.error || 'Failed to sign in with Google');
       setGoogleLoading(false);
     }
@@ -167,12 +136,6 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, 
             <button onClick={onRegisterClick} className="text-primary font-medium hover:underline">
               Sign up
             </button>
-          </div>
-          
-          <div className="mt-8 pt-6 border-t border-zinc-900 text-xs text-center text-zinc-600 space-y-1">
-             <p>Use 'prof@...' for Lecturer access.</p>
-             <p>Use 'admin@...' for Admin access.</p>
-             <p>Use 'rep@...' for Class Rep access.</p>
           </div>
         </div>
       </div>

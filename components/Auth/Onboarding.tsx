@@ -88,7 +88,24 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, userId, user
         setError('');
         
         if (userId) {
-          const result = await completeOnboarding(userId, selectedRole);
+          // Prepare onboarding data
+          const onboardingData = {
+            phoneNumber: formData.phoneNumber || undefined,
+            matricNumber: formData.matricNumber || undefined,
+            department: formData.department || undefined,
+            level: formData.level || undefined,
+            staffId: formData.staffId || undefined,
+            courses: selectedCourses.length > 0 ? selectedCourses : undefined,
+            assignedLecturer: formData.assignedLecturer || undefined,
+            avatarUrl: profileImage || undefined,
+            permissions: {
+              notifications: permissions.notifications,
+              location: permissions.location,
+              darkMode: permissions.darkMode
+            }
+          };
+
+          const result = await completeOnboarding(userId, selectedRole, onboardingData);
           if (!result.success) {
             setError(result.error || 'Failed to complete onboarding');
             setIsSubmitting(false);
@@ -475,6 +492,16 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, userId, user
         </div>
 
         <div className="bg-zinc-950 border border-zinc-900 p-6 md:p-8 rounded-3xl shadow-2xl relative overflow-hidden">
+             {/* Error Display */}
+             {error && (
+               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm flex items-start gap-3">
+                 <div className="flex-1">{error}</div>
+                 <button onClick={() => setError('')} className="text-red-400 hover:text-red-300">
+                   <X size={16} />
+                 </button>
+               </div>
+             )}
+             
              {/* Progress Bar */}
              <div className="flex gap-2 mb-8 px-2">
                 {Array.from({ length: totalSteps }).map((_, i) => (
@@ -517,10 +544,11 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete, userId, user
                         className="flex-1" 
                         size="lg" 
                         onClick={handleNext}
-                        disabled={(step === 1 && !selectedRole) || (pendingImage !== null)}
+                        disabled={(step === 1 && !selectedRole) || (pendingImage !== null) || isSubmitting}
+                        isLoading={isSubmitting}
                     >
                         {step === 1 && isPaymentEnabled && !hasPaid ? 'Continue to Payment' : (step === totalSteps ? 'Finish Setup' : 'Continue')}
-                        {step < totalSteps && <ChevronRight size={18} className="ml-2" />}
+                        {step < totalSteps && !isSubmitting && <ChevronRight size={18} className="ml-2" />}
                     </Button>
                 </div>
             </div>

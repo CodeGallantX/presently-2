@@ -9,6 +9,27 @@ CREATE TABLE IF NOT EXISTS profiles (
   role user_role NOT NULL DEFAULT 'STUDENT',
   avatar_url TEXT,
   onboarding_complete BOOLEAN NOT NULL DEFAULT FALSE,
+  
+  -- Contact Information
+  phone_number TEXT,
+  
+  -- Student-specific fields
+  matric_number TEXT,
+  department TEXT,
+  level TEXT,
+  
+  -- Lecturer-specific fields
+  staff_id TEXT,
+  courses TEXT, -- Comma-separated list of courses
+  
+  -- Class Rep-specific fields
+  assigned_lecturer TEXT,
+  
+  -- Preferences
+  notifications_enabled BOOLEAN DEFAULT TRUE,
+  location_enabled BOOLEAN DEFAULT FALSE,
+  dark_mode BOOLEAN DEFAULT TRUE,
+  
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );

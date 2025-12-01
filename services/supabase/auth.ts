@@ -181,7 +181,22 @@ export async function signOut(): Promise<{ success: boolean; error?: string }> {
 // Update user profile after onboarding
 export async function completeOnboarding(
   userId: string,
-  role: UserRole
+  role: UserRole,
+  onboardingData?: {
+    phoneNumber?: string;
+    matricNumber?: string;
+    department?: string;
+    level?: string;
+    staffId?: string;
+    courses?: string[];
+    assignedLecturer?: string;
+    avatarUrl?: string;
+    permissions?: {
+      notifications: boolean;
+      location: boolean;
+      darkMode: boolean;
+    };
+  }
 ): Promise<{ success: boolean; error?: string }> {
   if (!isSupabaseConfigured()) {
     return { 
@@ -191,13 +206,49 @@ export async function completeOnboarding(
   }
 
   try {
+    // Prepare update data
+    const updateData: any = {
+      role,
+      onboarding_complete: true,
+      updated_at: new Date().toISOString()
+    };
+
+    // Add onboarding data if provided
+    if (onboardingData) {
+      if (onboardingData.phoneNumber) {
+        updateData.phone_number = onboardingData.phoneNumber;
+      }
+      if (onboardingData.matricNumber) {
+        updateData.matric_number = onboardingData.matricNumber;
+      }
+      if (onboardingData.department) {
+        updateData.department = onboardingData.department;
+      }
+      if (onboardingData.level) {
+        updateData.level = onboardingData.level;
+      }
+      if (onboardingData.staffId) {
+        updateData.staff_id = onboardingData.staffId;
+      }
+      if (onboardingData.courses && onboardingData.courses.length > 0) {
+        updateData.courses = onboardingData.courses.join(',');
+      }
+      if (onboardingData.assignedLecturer) {
+        updateData.assigned_lecturer = onboardingData.assignedLecturer;
+      }
+      if (onboardingData.avatarUrl) {
+        updateData.avatar_url = onboardingData.avatarUrl;
+      }
+      if (onboardingData.permissions) {
+        updateData.notifications_enabled = onboardingData.permissions.notifications;
+        updateData.location_enabled = onboardingData.permissions.location;
+        updateData.dark_mode = onboardingData.permissions.darkMode;
+      }
+    }
+
     const { error } = await supabase
       .from('profiles')
-      .update({
-        role,
-        onboarding_complete: true,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', userId);
 
     if (error) throw error;

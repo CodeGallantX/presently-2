@@ -19,6 +19,16 @@ export interface Database {
           role: UserRole
           avatar_url: string | null
           onboarding_complete: boolean
+          phone_number: string | null
+          matric_number: string | null
+          department: string | null
+          level: string | null
+          staff_id: string | null
+          courses: string | null
+          assigned_lecturer: string | null
+          notifications_enabled: boolean
+          location_enabled: boolean
+          dark_mode: boolean
           created_at: string
           updated_at: string
         }
@@ -29,6 +39,16 @@ export interface Database {
           role: UserRole
           avatar_url?: string | null
           onboarding_complete?: boolean
+          phone_number?: string | null
+          matric_number?: string | null
+          department?: string | null
+          level?: string | null
+          staff_id?: string | null
+          courses?: string | null
+          assigned_lecturer?: string | null
+          notifications_enabled?: boolean
+          location_enabled?: boolean
+          dark_mode?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -39,6 +59,16 @@ export interface Database {
           role?: UserRole
           avatar_url?: string | null
           onboarding_complete?: boolean
+          phone_number?: string | null
+          matric_number?: string | null
+          department?: string | null
+          level?: string | null
+          staff_id?: string | null
+          courses?: string | null
+          assigned_lecturer?: string | null
+          notifications_enabled?: boolean
+          location_enabled?: boolean
+          dark_mode?: boolean
           updated_at?: string
         }
       }

@@ -23,8 +23,9 @@ const createSupabaseClient = () => {
   if (!isSupabaseConfigured()) {
     // Create a minimal client with placeholder values to avoid initialization errors
     // Real operations will be blocked by isSupabaseConfigured() checks in auth functions
+    // Using a placeholder URL to prevent any accidental connections to production
     return createClient<Database>(
-      supabaseUrl,
+      'https://placeholder.supabase.co',
       'placeholder-key',
       {
         auth: {

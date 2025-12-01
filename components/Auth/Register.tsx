@@ -24,15 +24,17 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
     setLoading(true);
     setError('');
 
-    const result = await signUpWithEmail(email, password, name);
-    
-    if (result.success) {
-      onRegister(name, email, result.requiresEmailVerification || false);
-    } else {
-      setError(result.error || 'Failed to sign up');
+    try {
+      const result = await signUpWithEmail(email, password, name);
+      
+      if (result.success) {
+        onRegister(name, email, result.requiresEmailVerification || false);
+      } else {
+        setError(result.error || 'Failed to sign up');
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleGoogleSignup = async () => {

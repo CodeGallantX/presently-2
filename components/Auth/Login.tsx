@@ -25,15 +25,17 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, 
     setLoading(true);
     setError('');
 
-    const result = await signInWithEmail(email, password);
-    
-    if (result.success && result.user) {
-      onLogin(result.user.role, result.user.name, result.user.id, result.user.email);
-    } else {
-      setError(result.error || 'Failed to sign in');
+    try {
+      const result = await signInWithEmail(email, password);
+      
+      if (result.success && result.user) {
+        onLogin(result.user.role, result.user.name, result.user.id, result.user.email);
+      } else {
+        setError(result.error || 'Failed to sign in');
+      }
+    } finally {
+      setLoading(false);
     }
-    
-    setLoading(false);
   };
 
   const handleGoogleLogin = async () => {

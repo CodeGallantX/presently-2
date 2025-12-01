@@ -5,12 +5,15 @@ import type { Database } from './types';
 const supabaseUrl = 'https://fvksxcavxjslqptjwsvo.supabase.co';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+// Minimum length for a valid Supabase anon key (JWT tokens are typically much longer)
+const MIN_KEY_LENGTH = 20;
+
 // Check if Supabase is configured
 export const isSupabaseConfigured = () => {
   return supabaseAnonKey && 
          supabaseAnonKey !== 'your-anon-key-here' &&
          supabaseAnonKey !== 'your-supabase-anon-key' &&
-         supabaseAnonKey.length > 20; // Basic validation for a real key
+         supabaseAnonKey.length > MIN_KEY_LENGTH; // Basic validation for a real key
 };
 
 // Create Supabase client only if properly configured

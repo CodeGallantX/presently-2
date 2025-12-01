@@ -23,10 +23,10 @@ const createSupabaseClient = () => {
   if (!isSupabaseConfigured()) {
     // Create a minimal client with placeholder values to avoid initialization errors
     // Real operations will be blocked by isSupabaseConfigured() checks in auth functions
-    // Using a placeholder URL to prevent any accidental connections to production
+    // Using a placeholder URL and a valid JWT format placeholder key to prevent parsing errors
     return createClient<Database>(
       'https://placeholder.supabase.co',
-      'placeholder-key',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6MTk2MDU1MjAwMH0.placeholder-signature',
       {
         auth: {
           autoRefreshToken: false,

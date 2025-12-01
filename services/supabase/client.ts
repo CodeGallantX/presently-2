@@ -16,33 +16,33 @@ export const isSupabaseConfigured = () => {
          supabaseAnonKey.length > MIN_KEY_LENGTH; // Basic validation for a real key
 };
 
-// Create Supabase client only if properly configured
-// Use placeholder values if not configured to prevent errors
+// Create Supabase client - always create a client but with configuration check
 const createSupabaseClient = () => {
-  if (isSupabaseConfigured()) {
-    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        autoRefreshToken: true,
-        persistSession: true,
-        detectSessionInUrl: true
+  // If not properly configured, create a client with placeholder values
+  // The auth functions will check isSupabaseConfigured() and return errors
+  if (!isSupabaseConfigured()) {
+    // Create a minimal client with placeholder values to avoid initialization errors
+    // Real operations will be blocked by isSupabaseConfigured() checks in auth functions
+    return createClient<Database>(
+      supabaseUrl,
+      'placeholder-key',
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+          detectSessionInUrl: false
+        }
       }
-    });
+    );
   }
   
-  // Return a client with placeholder values for demo mode
-  // This prevents "supabaseUrl is required" error
-  // Using a far future expiration date (year 2099)
-  return createClient<Database>(
-    'https://placeholder.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBsYWNlaG9sZGVyIiwicm9sZSI6ImFub24iLCJpYXQiOjE2NDUxOTIwMDAsImV4cCI6NDA3MDkwODgwMH0.placeholder',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false
-      }
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true
     }
-  );
+  });
 };
 
 export const supabase = createSupabaseClient();

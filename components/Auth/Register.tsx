@@ -3,9 +3,10 @@ import { Button } from '../Button';
 import { Input } from '../Input';
 import { Logo } from '../Logo';
 import { Mail, Lock, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { signUpWithEmail, signInWithGoogle } from '../../services/supabase/auth';
 
 interface RegisterProps {
-  onRegister: (name: string) => void;
+  onRegister: (name: string, email: string, requiresVerification: boolean) => void;
   onLoginClick: () => void;
   onBack: () => void;
 }
@@ -14,23 +15,55 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      onRegister(name);
-    }, 1000);
+    setError('');
+
+    const result = await signUpWithEmail(email, password, name);
+    
+    if (result.success) {
+      onRegister(name, email, result.requiresEmailVerification || false);
+    } else {
+      // Fallback to demo mode if Supabase is not configured
+      if (result.error?.includes('not configured')) {
+        setTimeout(() => {
+          setLoading(false);
+          onRegister(name, email, false);
+        }, 1000);
+        return;
+      }
+      
+      setError(result.error || 'Failed to sign up');
+    }
+    
+    setLoading(false);
   };
 
-  const handleGoogleSignup = () => {
-      setGoogleLoading(true);
-      setTimeout(() => {
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    setError('');
+
+    const result = await signInWithGoogle();
+    
+    if (!result.success) {
+      // Fallback to demo mode if Supabase is not configured
+      if (result.error?.includes('not configured')) {
+        setTimeout(() => {
           setGoogleLoading(false);
-          onRegister("Google User");
-      }, 1500);
+          onRegister("Google User", "", false);
+        }, 1500);
+        return;
+      }
+      
+      setError(result.error || 'Failed to sign up with Google');
+      setGoogleLoading(false);
+    }
+    // Success case is handled by onAuthStateChange in App.tsx
   };
 
   return (
@@ -47,6 +80,12 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
         </div>
 
         <div className="bg-zinc-950 border border-zinc-900 p-8 rounded-2xl shadow-2xl">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input 
                 label="Full Name" 
@@ -63,6 +102,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
               placeholder="name@university.edu" 
               icon={<Mail size={16} />} 
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <Input 
               label="Password" 
@@ -70,6 +111,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
               placeholder="••••••••" 
               icon={<Lock size={16} />} 
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             
             <p className="text-xs text-zinc-500">

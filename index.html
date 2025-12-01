@@ -6,70 +6,9 @@
     <title>Presently | Smart Attendance</title>
     <link rel="manifest" href="./manifest.json" />
     <meta name="theme-color" content="#ffca0d" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
-    
-    <!-- MapLibre GL CSS -->
-    <link href="https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css" rel="stylesheet" />
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Figtree', 'sans-serif'],
-            },
-            colors: {
-              primary: {
-                DEFAULT: '#ffca0d',
-                hover: '#e6b60b',
-                foreground: '#000000',
-              },
-              background: '#09090b', // Zinc 950
-              surface: '#18181b', // Zinc 900
-            }
-          }
-        }
-      }
-    </script>
-    <style>
-      /* Custom scrollbar for webkit */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #09090b; 
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #333; 
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #555; 
-      }
-    </style>
-  <script type="importmap">
-{
-  "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
-    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.6",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
-    "framer-motion": "https://aistudiocdn.com/framer-motion@^11.0.8",
-    "react-map-gl": "https://esm.sh/react-map-gl@7.1.7?external=react,react-dom",
-    "maplibre-gl": "https://esm.sh/maplibre-gl@4.0.0"
-  }
-}
-</script>
 </head>
   <body class="bg-background text-zinc-100 min-h-screen antialiased selection:bg-primary selection:text-black font-sans">
     <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

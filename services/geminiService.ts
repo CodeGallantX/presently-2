@@ -1,6 +1,8 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize with a placeholder or empty string to avoid browser errors
+const API_KEY = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
+const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 const SYSTEM_INSTRUCTION = `You are 'Presently AI', a helpful assistant for the Presently Attendance Management System.
 Your goal is to help students and lecturers with attendance related queries.
@@ -11,6 +13,9 @@ Theme: You are part of a 'Yellow and Black' branded modern SaaS platform.`;
 
 export const getAiResponse = async (userMessage: string): Promise<string> => {
   try {
+    if (!ai) {
+      return "AI assistant is currently unavailable. Please configure the API key.";
+    }
     const response: GenerateContentResponse = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: userMessage,
@@ -28,6 +33,9 @@ export const getAiResponse = async (userMessage: string): Promise<string> => {
 
 export const analyzeTimetableImage = async (base64Image: string): Promise<any[]> => {
   try {
+    if (!ai) {
+      throw new Error("AI service is currently unavailable. Please configure the API key.");
+    }
     // Remove header if present (data:image/png;base64,)
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 

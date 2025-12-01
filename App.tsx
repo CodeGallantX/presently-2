@@ -16,59 +16,122 @@ import { AiAssistant } from './components/Dashboard/AiAssistant';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { NotFound } from './components/NotFound';
 import { UserRole } from './types';
+import { useAuth } from './services/useAuth';
+import { signOut } from './services/authService';
+import { navigationGuard, getDefaultPageForRole } from './services/rbac';
 
 // Page state type
 type PageState = 'landing' | 'login' | 'register' | 'onboarding' | 'dashboard' | 'settings' | '404';
 
 const App: React.FC = () => {
+  const { user, isAuthenticated, isLoading, navigate: rbacNavigate } = useAuth();
   const [currentPage, setPage] = useState<PageState>('landing');
-  const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [userName, setUserName] = useState<string>('User');
-  const [dashboardPage, setDashboardPage] = useState('dashboard'); // Sub-navigation within Layout
+  const [dashboardPage, setDashboardPage] = useState('dashboard');
+
+  // Initialize page based on auth state
+  useEffect(() => {
+    if (isLoading) return;
+
+    if (!isAuthenticated) {
+      // Not authenticated - stay on public pages
+      if (currentPage !== 'landing' && currentPage !== 'login' && currentPage !== 'register') {
+        setPage('landing');
+      }
+    } else if (user) {
+      // Authenticated - check onboarding status
+      if (!user.onboardingComplete) {
+        setPage('onboarding');
+      } else if (currentPage === 'landing' || currentPage === 'login' || currentPage === 'register' || currentPage === 'onboarding') {
+        // Redirect to dashboard if on public pages or onboarding is complete
+        setPage('dashboard');
+        setDashboardPage(getDefaultPageForRole(user.role));
+      }
+    }
+  }, [isAuthenticated, user, isLoading]);
+
+  // Navigation callback for RBAC
+  const handleNavigate = (page: string) => {
+    if (page === 'dashboard' || page === 'profile' || page === 'notifications' || page === 'settings') {
+      if (page === 'settings') {
+        setPage('settings');
+        setDashboardPage('settings');
+      } else if (page === 'profile' || page === 'notifications') {
+        setPage('dashboard');
+        setDashboardPage(page);
+      } else {
+        setPage('dashboard');
+        setDashboardPage('dashboard');
+      }
+    } else {
+      setPage(page as PageState);
+    }
+  };
 
   const handleLogin = (role: UserRole, name: string) => {
-    setUserRole(role);
-    setUserName(name);
-    setPage('dashboard');
-    setDashboardPage('dashboard');
+    // Check if onboarding is complete
+    if (user && !user.onboardingComplete) {
+      handleNavigate('onboarding');
+    } else {
+      rbacNavigate('dashboard', handleNavigate);
+    }
   };
 
   const handleRegisterSuccess = (name: string) => {
-    setUserName(name);
-    setPage('onboarding');
+    handleNavigate('onboarding');
   };
 
   const handleOnboardingComplete = (role: UserRole) => {
-    setUserRole(role);
-    setPage('dashboard');
+    rbacNavigate('dashboard', handleNavigate);
   };
 
-  const handleLogout = () => {
-    setUserRole(null);
-    setUserName('User');
+  const handleLogout = async () => {
+    await signOut();
     setPage('landing');
     setDashboardPage('dashboard');
   };
   
-  // Handle sub-navigation change from Sidebar
+  // Handle sub-navigation change from Sidebar with RBAC
   const handleDashboardNavChange = (page: string) => {
+    if (!user) {
+      handleNavigate('login');
+      return;
+    }
+
+    // Use RBAC navigation guard
+    const result = navigationGuard(user.role, user.onboardingComplete, page);
+    
+    if (result.allowed) {
       if (page === 'settings') {
-          setPage('settings'); // Settings is a top-level page state in this specific architecture choice to keep Layout consistent
-          setDashboardPage('settings');
-      } else if (page === 'profile') {
-          setPage('dashboard');
-          setDashboardPage('profile');
-      } else if (page === 'notifications') {
-          setPage('dashboard');
-          setDashboardPage('notifications');
+        setPage('settings');
+        setDashboardPage('settings');
+      } else if (page === 'profile' || page === 'notifications') {
+        setPage('dashboard');
+        setDashboardPage(page);
       } else {
-          setDashboardPage(page);
-          setPage('dashboard'); // Stay in dashboard layout context
+        setDashboardPage(page);
+        setPage('dashboard');
       }
+    } else if (result.redirectTo) {
+      // Access denied - redirect to default page
+      console.log(`Access denied to ${page}: ${result.reason}`);
+      handleNavigate(result.redirectTo);
+    }
   };
 
   // Render logic based on state
   const renderContent = () => {
+    // Show loading state while checking auth
+    if (isLoading) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-zinc-400">Loading...</p>
+          </div>
+        </div>
+      );
+    }
+
     switch (currentPage) {
       case 'landing':
         return <LandingPage onGetStarted={() => setPage('register')} onLogin={() => setPage('login')} />;
@@ -84,16 +147,22 @@ const App: React.FC = () => {
       
       case 'dashboard':
       case 'settings':
+        // Ensure user is authenticated before rendering dashboard
+        if (!user) {
+          setPage('login');
+          return null;
+        }
+
         return (
           <Layout 
-            userRole={userRole!}
-            userName={userName}
+            userRole={user.role}
+            userName={user.name}
             onLogout={handleLogout}
             currentPage={dashboardPage}
             setCurrentPage={handleDashboardNavChange}
           >
             {dashboardPage === 'profile' && (
-                 <ProfilePage userRole={userRole!} userName={userName} />
+                 <ProfilePage userRole={user.role} userName={user.name} />
             )}
             {dashboardPage === 'notifications' && (
                  <NotificationsPage />
@@ -102,15 +171,15 @@ const App: React.FC = () => {
             {/* Dashboard Role Routing */}
             {currentPage === 'dashboard' && dashboardPage !== 'profile' && dashboardPage !== 'notifications' && (
                 <>
-                    {userRole === UserRole.STUDENT && <StudentDashboard userName={userName} view={dashboardPage} />}
-                    {userRole === UserRole.LECTURER && <LecturerDashboard userName={userName} view={dashboardPage} />}
-                    {userRole === UserRole.ADMIN && <AdminDashboard userName={userName} view={dashboardPage} />}
-                    {userRole === UserRole.CLASS_REP && <ClassRepDashboard userName={userName} view={dashboardPage} />}
+                    {user.role === UserRole.STUDENT && <StudentDashboard userName={user.name} view={dashboardPage} />}
+                    {user.role === UserRole.LECTURER && <LecturerDashboard userName={user.name} view={dashboardPage} />}
+                    {user.role === UserRole.ADMIN && <AdminDashboard userName={user.name} view={dashboardPage} />}
+                    {user.role === UserRole.CLASS_REP && <ClassRepDashboard userName={user.name} view={dashboardPage} />}
                 </>
             )}
 
             {currentPage === 'settings' && (
-                <SettingsPage userRole={userRole!} onLogout={handleLogout} />
+                <SettingsPage userRole={user.role} onLogout={handleLogout} />
             )}
             <AiAssistant />
           </Layout>

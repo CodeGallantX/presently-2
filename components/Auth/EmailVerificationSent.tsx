@@ -13,7 +13,8 @@ export const EmailVerificationSent: React.FC<EmailVerificationSentProps> = ({ em
 
   const handleResend = async () => {
     setResendStatus('sending');
-    // Simulate resend (you can add actual resend logic here)
+    // TODO: Implement actual resend logic using Supabase auth service
+    // Example: await supabase.auth.resend({ type: 'signup', email })
     setTimeout(() => {
       setResendStatus('sent');
       setTimeout(() => setResendStatus('idle'), 3000);

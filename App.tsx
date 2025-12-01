@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
-import { AnimatePresence, motion } from 'framer-motion';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Auth/Login';
 import { Register } from './components/Auth/Register';

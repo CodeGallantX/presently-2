@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Logo } from '../Logo';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
@@ -11,11 +11,7 @@ export const VerifyEmail: React.FC = () => {
   const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
   const [message, setMessage] = useState('Verifying your email...');
 
-  useEffect(() => {
-    verifyEmail();
-  }, []);
-
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       if (!supabase) {
         setStatus('error');
@@ -67,7 +63,11 @@ export const VerifyEmail: React.FC = () => {
       setStatus('error');
       setMessage('An error occurred during verification. Please try again.');
     }
-  };
+  }, [location.hash, navigate]);
+
+  useEffect(() => {
+    verifyEmail();
+  }, [verifyEmail]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-zinc-950 to-zinc-900 flex flex-col items-center justify-center p-4">

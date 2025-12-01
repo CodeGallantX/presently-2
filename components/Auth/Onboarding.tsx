@@ -5,10 +5,11 @@ import { Input } from '../Input';
 import { Logo } from '../Logo';
 import { UserRole } from '../../types';
 import { PaymentGateway } from './PaymentGateway';
+import { getCurrentUser, updateUserProfile } from '../../services/authService';
 import { 
   User, BookOpen, Bell, MapPin, Check, Users, Upload, 
   Moon, Sun, Camera, Smartphone, ChevronRight, ChevronLeft,
-  GraduationCap, Briefcase, UserCheck, X, Plus
+  GraduationCap, Briefcase, UserCheck, X, Plus, AlertCircle
 } from 'lucide-react';
 
 interface OnboardingProps {
@@ -33,6 +34,9 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
   const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
   const [profileImage, setProfileImage] = useState<string | null>(null);
   const [pendingImage, setPendingImage] = useState<string | null>(null); // Temp image for confirmation
+  const [userId, setUserId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   
   // Payment State
   const [showPayment, setShowPayment] = useState(false);
@@ -61,12 +65,21 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       // Check for global configuration override
       const storedSetting = localStorage.getItem('PAYMENT_GATEWAY_ENABLED');
       setIsPaymentEnabled(storedSetting === 'true');
+
+      // Get current user ID
+      const fetchUser = async () => {
+        const user = await getCurrentUser();
+        if (user) {
+          setUserId(user.id);
+        }
+      };
+      fetchUser();
   }, []);
 
   // Calculate total steps based on role
   const totalSteps = selectedRole === UserRole.STUDENT ? 5 : 4;
 
-  const handleNext = () => {
+  const handleNext = async () => {
     // Intercept Step 1 for Payment ONLY if configured enabled
     if (step === 1 && selectedRole && isPaymentEnabled && !hasPaid) {
         setShowPayment(true);
@@ -77,7 +90,45 @@ export const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
       setDirection(1);
       setStep(step + 1);
     } else {
-      if (selectedRole) onComplete(selectedRole);
+      // Final step - save profile to Supabase
+      if (selectedRole && userId) {
+        setSaving(true);
+        setError(null);
+
+        const updates: any = {
+          role: selectedRole,
+          onboardingComplete: true,
+          phoneNumber: formData.phoneNumber || undefined,
+          avatar: profileImage || undefined
+        };
+
+        // Add role-specific data
+        if (selectedRole === UserRole.STUDENT) {
+          updates.matricNumber = formData.matricNumber;
+          updates.department = formData.department;
+          updates.level = formData.level;
+        } else if (selectedRole === UserRole.LECTURER) {
+          updates.staffId = formData.staffId;
+          updates.department = formData.department;
+        } else if (selectedRole === UserRole.CLASS_REP) {
+          updates.matricNumber = formData.matricNumber;
+          updates.department = formData.department;
+          updates.level = formData.level;
+        }
+
+        const { error: updateError } = await updateUserProfile(userId, updates);
+
+        setSaving(false);
+
+        if (updateError) {
+          setError(updateError);
+          return;
+        }
+
+        onComplete(selectedRole);
+      } else {
+        setError('User session not found. Please try logging in again.');
+      }
     }
   };
 

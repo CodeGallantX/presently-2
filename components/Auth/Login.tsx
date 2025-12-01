@@ -3,7 +3,8 @@ import { Button } from '../Button';
 import { Input } from '../Input';
 import { Logo } from '../Logo';
 import { UserRole } from '../../types';
-import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, ArrowLeft, AlertCircle } from 'lucide-react';
+import { signIn, signInWithGoogle } from '../../services/authService';
 
 interface LoginProps {
   onLogin: (role: UserRole, name: string) => void;
@@ -15,39 +16,42 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+
+    const { user, error: signInError } = await signIn(email, password);
+
+    if (signInError) {
+      setError(signInError);
       setLoading(false);
-      
-      let role = UserRole.STUDENT;
-      let name = "John Doe";
+      return;
+    }
 
-      if (email.toLowerCase().includes('admin')) {
-        role = UserRole.ADMIN;
-        name = "System Administrator";
-      } else if (email.toLowerCase().includes('prof') || email.toLowerCase().includes('lecturer')) {
-        role = UserRole.LECTURER;
-        name = "Dr. Sarah Johnson";
-      } else if (email.toLowerCase().includes('rep')) {
-        role = UserRole.CLASS_REP;
-        name = "Jane ClassRep";
-      }
-
-      onLogin(role, name);
-    }, 1000);
+    if (user) {
+      setLoading(false);
+      onLogin(user.role, user.name);
+    } else {
+      setError('Failed to sign in. Please try again.');
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    setTimeout(() => {
-        setGoogleLoading(false);
-        // Simulate Google Auth Success - Defaulting to Student for this demo
-        onLogin(UserRole.STUDENT, "Google User");
-    }, 1500);
+    setError(null);
+
+    const { error: googleError } = await signInWithGoogle();
+
+    if (googleError) {
+      setError(googleError);
+      setGoogleLoading(false);
+    }
+    // Note: Google OAuth will redirect, so we don't need to handle success here
   };
 
   return (
@@ -64,6 +68,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
         </div>
 
         <div className="bg-zinc-950 border border-zinc-900 p-8 rounded-2xl shadow-2xl">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input 
               label="Email" 
@@ -80,6 +91,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
               placeholder="••••••••" 
               icon={<Lock size={16} />} 
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             
             <div className="flex items-center justify-between text-sm">
@@ -129,10 +142,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
             </button>
           </div>
           
-          <div className="mt-8 pt-6 border-t border-zinc-900 text-xs text-center text-zinc-600 space-y-1">
-             <p>Use 'prof@...' for Lecturer access.</p>
-             <p>Use 'admin@...' for Admin access.</p>
-             <p>Use 'rep@...' for Class Rep access.</p>
+          <div className="mt-8 pt-6 border-t border-zinc-900 text-xs text-center text-zinc-600">
+             <p>Sign in with your registered account credentials.</p>
           </div>
         </div>
       </div>

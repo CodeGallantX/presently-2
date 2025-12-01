@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Logo } from '../Logo';
-import { Mail, Lock, User as UserIcon, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, User as UserIcon, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
+import { signUp, signInWithGoogle } from '../../services/authService';
 
 interface RegisterProps {
   onRegister: (name: string) => void;
@@ -14,23 +15,56 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    setError(null);
+    setSuccess(null);
+
+    // Basic validation
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
       setLoading(false);
-      onRegister(name);
-    }, 1000);
+      return;
+    }
+
+    const { user, error: signUpError } = await signUp(email, password, name);
+
+    if (signUpError) {
+      setError(signUpError);
+      setLoading(false);
+      return;
+    }
+
+    if (user) {
+      setSuccess('Account created successfully! Please check your email to verify your account.');
+      setLoading(false);
+      // Redirect to onboarding after a short delay
+      setTimeout(() => {
+        onRegister(name);
+      }, 2000);
+    } else {
+      setError('Failed to create account. Please try again.');
+      setLoading(false);
+    }
   };
 
-  const handleGoogleSignup = () => {
-      setGoogleLoading(true);
-      setTimeout(() => {
-          setGoogleLoading(false);
-          onRegister("Google User");
-      }, 1500);
+  const handleGoogleSignup = async () => {
+    setGoogleLoading(true);
+    setError(null);
+
+    const { error: googleError } = await signInWithGoogle();
+
+    if (googleError) {
+      setError(googleError);
+      setGoogleLoading(false);
+    }
+    // Note: Google OAuth will redirect, so we don't need to handle success here
   };
 
   return (
@@ -47,6 +81,20 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
         </div>
 
         <div className="bg-zinc-950 border border-zinc-900 p-8 rounded-2xl shadow-2xl">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-center gap-2 text-red-400 text-sm">
+              <AlertCircle size={16} />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {success && (
+            <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-center gap-2 text-green-400 text-sm">
+              <CheckCircle size={16} />
+              <span>{success}</span>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input 
                 label="Full Name" 
@@ -63,6 +111,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
               placeholder="name@university.edu" 
               icon={<Mail size={16} />} 
               required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <Input 
               label="Password" 
@@ -70,6 +120,8 @@ export const Register: React.FC<RegisterProps> = ({ onRegister, onLoginClick, on
               placeholder="••••••••" 
               icon={<Lock size={16} />} 
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             
             <p className="text-xs text-zinc-500">

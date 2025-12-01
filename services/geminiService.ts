@@ -1,7 +1,5 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const SYSTEM_INSTRUCTION = `You are 'Presently AI', a helpful assistant for the Presently Attendance Management System.
 Your goal is to help students and lecturers with attendance related queries.
 For students: Explain how to scan QR codes, check analytics, and understand attendance policies (generally).
@@ -9,9 +7,23 @@ For lecturers: Help them draft emails to students with low attendance, explain h
 Keep answers concise, professional, and friendly.
 Theme: You are part of a 'Yellow and Black' branded modern SaaS platform.`;
 
+// Lazy initialization of AI client
+let ai: GoogleGenAI | null = null;
+const getAiClient = (): GoogleGenAI => {
+  if (!ai) {
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_API_KEY;
+    if (!apiKey) {
+      throw new Error("API key is not configured");
+    }
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
+};
+
 export const getAiResponse = async (userMessage: string): Promise<string> => {
   try {
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const aiClient = getAiClient();
+    const response: GenerateContentResponse = await aiClient.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: userMessage,
       config: {
@@ -31,7 +43,8 @@ export const analyzeTimetableImage = async (base64Image: string): Promise<any[]>
     // Remove header if present (data:image/png;base64,)
     const cleanBase64 = base64Image.split(',')[1] || base64Image;
 
-    const response = await ai.models.generateContent({
+    const aiClient = getAiClient();
+    const response = await aiClient.models.generateContent({
       model: 'gemini-3-pro-preview',
       contents: {
         parts: [

@@ -4,50 +4,82 @@ import { Input } from '../Input';
 import { Logo } from '../Logo';
 import { UserRole } from '../../types';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { signInWithEmail, signInWithGoogle } from '../../services/supabase/auth';
 
 interface LoginProps {
-  onLogin: (role: UserRole, name: string) => void;
+  onLogin: (role: UserRole, name: string, userId?: string, email?: string) => void;
   onRegisterClick: () => void;
   onBack: () => void;
+  userId: string | null;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }) => {
+export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, userId }) => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
-    setTimeout(() => {
-      setLoading(false);
-      
-      let role = UserRole.STUDENT;
-      let name = "John Doe";
+    setError('');
 
-      if (email.toLowerCase().includes('admin')) {
-        role = UserRole.ADMIN;
-        name = "System Administrator";
-      } else if (email.toLowerCase().includes('prof') || email.toLowerCase().includes('lecturer')) {
-        role = UserRole.LECTURER;
-        name = "Dr. Sarah Johnson";
-      } else if (email.toLowerCase().includes('rep')) {
-        role = UserRole.CLASS_REP;
-        name = "Jane ClassRep";
+    const result = await signInWithEmail(email, password);
+    
+    if (result.success && result.user) {
+      onLogin(result.user.role, result.user.name, result.user.id, result.user.email);
+    } else {
+      // Fallback to demo mode if Supabase is not configured
+      if (result.error?.includes('not configured')) {
+        // Simulate API call for demo
+        setTimeout(() => {
+          setLoading(false);
+          
+          let role = UserRole.STUDENT;
+          let name = "John Doe";
+
+          if (email.toLowerCase().includes('admin')) {
+            role = UserRole.ADMIN;
+            name = "System Administrator";
+          } else if (email.toLowerCase().includes('prof') || email.toLowerCase().includes('lecturer')) {
+            role = UserRole.LECTURER;
+            name = "Dr. Sarah Johnson";
+          } else if (email.toLowerCase().includes('rep')) {
+            role = UserRole.CLASS_REP;
+            name = "Jane ClassRep";
+          }
+
+          onLogin(role, name);
+        }, 1000);
+        return;
       }
-
-      onLogin(role, name);
-    }, 1000);
+      
+      setError(result.error || 'Failed to sign in');
+      setLoading(false);
+    }
   };
 
-  const handleGoogleLogin = () => {
+  const handleGoogleLogin = async () => {
     setGoogleLoading(true);
-    setTimeout(() => {
-        setGoogleLoading(false);
-        // Simulate Google Auth Success - Defaulting to Student for this demo
-        onLogin(UserRole.STUDENT, "Google User");
-    }, 1500);
+    setError('');
+
+    const result = await signInWithGoogle();
+    
+    if (!result.success) {
+      // Fallback to demo mode if Supabase is not configured
+      if (result.error?.includes('not configured')) {
+        setTimeout(() => {
+          setGoogleLoading(false);
+          onLogin(UserRole.STUDENT, "Google User");
+        }, 1500);
+        return;
+      }
+      
+      setError(result.error || 'Failed to sign in with Google');
+      setGoogleLoading(false);
+    }
+    // Success case is handled by onAuthStateChange in App.tsx
   };
 
   return (
@@ -64,6 +96,12 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
         </div>
 
         <div className="bg-zinc-950 border border-zinc-900 p-8 rounded-2xl shadow-2xl">
+          {error && (
+            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+          
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input 
               label="Email" 
@@ -80,6 +118,8 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack }
               placeholder="••••••••" 
               icon={<Lock size={16} />} 
               required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             
             <div className="flex items-center justify-between text-sm">

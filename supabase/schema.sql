@@ -91,11 +91,11 @@ CREATE POLICY "Lecturers can view students and class reps"
   FOR SELECT
   USING (
     EXISTS (
-      SELECT 1 FROM profiles
-      WHERE id = auth.uid()
-      AND role = 'LECTURER'
+      SELECT 1 FROM profiles p
+      WHERE p.id = auth.uid()
+      AND p.role = 'LECTURER'
     )
-    AND role IN ('STUDENT', 'CLASS_REP')
+    AND profiles.role IN ('STUDENT', 'CLASS_REP')
   );
 
 -- Function: Update updated_at timestamp
@@ -136,6 +136,5 @@ CREATE TRIGGER on_auth_user_created
   EXECUTE FUNCTION handle_new_user();
 
 -- Grant permissions
-GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT USAGE ON SCHEMA public TO authenticated;
 GRANT ALL ON profiles TO authenticated;
-GRANT SELECT ON profiles TO anon;

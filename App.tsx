@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { HashRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LandingPage } from './components/LandingPage';
 import { Login } from './components/Auth/Login';
@@ -207,7 +207,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <HashRouter>
+    <BrowserRouter>
         <AnimatePresence mode="wait">
             <motion.div
                 key={currentPage}
@@ -220,7 +220,7 @@ const App: React.FC = () => {
                 {renderContent()}
             </motion.div>
         </AnimatePresence>
-    </HashRouter>
+    </BrowserRouter>
   );
 };
 

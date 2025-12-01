@@ -36,7 +36,7 @@ export async function signUpWithEmail(
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${window.location.origin}/#/onboarding`
+        emailRedirectTo: `${window.location.origin}/onboarding`
       }
     });
 
@@ -46,20 +46,8 @@ export async function signUpWithEmail(
       return { success: false, error: 'Failed to create user' };
     }
 
-    // Create profile entry
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        email: data.user.email!,
-        full_name: fullName,
-        role: 'STUDENT', // Default role, will be updated during onboarding
-        onboarding_complete: false
-      });
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError);
-    }
+    // Note: Profile is automatically created by the database trigger 'on_auth_user_created'
+    // No need to manually insert into profiles table
 
     return {
       success: true,
@@ -145,7 +133,7 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/#/onboarding`,
+        redirectTo: `${window.location.origin}/onboarding`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
@@ -231,6 +219,10 @@ export async function completeOnboarding(
         updateData.staff_id = onboardingData.staffId;
       }
       if (onboardingData.courses && onboardingData.courses.length > 0) {
+        // Note: Courses are stored as comma-separated string for simplicity
+        // For production with complex course management, consider:
+        // - Creating a separate courses table with many-to-many relationship
+        // - Using PostgreSQL array type for better querying
         updateData.courses = onboardingData.courses.join(',');
       }
       if (onboardingData.assignedLecturer) {

@@ -1,7 +1,7 @@
 import { GoogleGenAI, GenerateContentResponse, Type } from "@google/genai";
 
 // Initialize with a placeholder or empty string to avoid browser errors
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY || '';
+const API_KEY = (import.meta.env.VITE_GEMINI_API_KEY || '').trim();
 const ai = API_KEY ? new GoogleGenAI({ apiKey: API_KEY }) : null;
 
 const SYSTEM_INSTRUCTION = `You are 'Presently AI', a helpful assistant for the Presently Attendance Management System.

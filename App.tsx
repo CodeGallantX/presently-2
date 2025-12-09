@@ -6,6 +6,7 @@ import { Register } from './components/Auth/Register';
 import { Onboarding } from './components/Auth/Onboarding';
 import { EmailVerificationSent } from './components/Auth/EmailVerificationSent';
 import { VerifyEmail } from './components/Auth/VerifyEmail';
+import { AuthCallback } from './components/Auth/Callback';
 import { Layout } from './components/Layout';
 import { StudentDashboard } from './components/Dashboard/StudentDashboard';
 import { LecturerDashboard } from './components/Dashboard/LecturerDashboard';
@@ -16,6 +17,7 @@ import { NotificationsPage } from './components/Notifications/NotificationsPage'
 import { AiAssistant } from './components/Dashboard/AiAssistant';
 import { SettingsPage } from './components/Settings/SettingsPage';
 import { NotFound } from './components/NotFound';
+import { UnauthorizedPage } from './components/UnauthorizedPage';
 import { UserRole } from './types';
 import { supabase } from './services/supabase/client';
 import { getCurrentUserProfile } from './services/supabase/auth';
@@ -149,6 +151,8 @@ const AppContent: React.FC = () => {
       
       <Route path="/register" element={<Register onRegister={handleRegisterSuccess} onLoginClick={() => navigate('/login')} onBack={() => navigate('/')} />} />
       
+      <Route path="/auth/callback" element={<AuthCallback />} />
+      
       <Route path="/email-verification" element={<EmailVerificationSent email={userEmail} onBack={() => navigate('/login')} />} />
       
       <Route path="/verify-email" element={<VerifyEmail />} />
@@ -198,6 +202,8 @@ const AppContent: React.FC = () => {
       } />
       
       <Route path="*" element={<NotFound onBack={() => navigate('/')} />} />
+      
+      <Route path="/unauthorized" element={<UnauthorizedPage />} />
     </Routes>
   );
 };

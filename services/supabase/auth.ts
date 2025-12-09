@@ -36,7 +36,7 @@ export async function signUpWithEmail(
         data: {
           full_name: fullName,
         },
-        emailRedirectTo: `${window.location.origin}/verify-email`
+        emailRedirectTo: `${window.location.origin}/auth/callback`
       }
     });
 
@@ -133,7 +133,7 @@ export async function signInWithGoogle(): Promise<AuthResponse> {
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/verify-email`,
+        redirectTo: `${window.location.origin}/auth/callback`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',

@@ -7,6 +7,8 @@ import { Onboarding } from './components/Auth/Onboarding';
 import { EmailVerificationSent } from './components/Auth/EmailVerificationSent';
 import { VerifyEmail } from './components/Auth/VerifyEmail';
 import { AuthCallback } from './components/Auth/Callback';
+import { ForgotPassword } from './components/Auth/ForgotPassword';
+import { ResetPassword } from './components/Auth/ResetPassword';
 import { Layout } from './components/Layout';
 import { StudentDashboard } from './components/Dashboard/StudentDashboard';
 import { LecturerDashboard } from './components/Dashboard/LecturerDashboard';
@@ -150,6 +152,10 @@ const AppContent: React.FC = () => {
       <Route path="/login" element={<Login onLogin={handleLogin} onRegisterClick={() => navigate('/register')} onBack={() => navigate('/')} userId={userId} />} />
       
       <Route path="/register" element={<Register onRegister={handleRegisterSuccess} onLoginClick={() => navigate('/login')} onBack={() => navigate('/')} />} />
+      
+      <Route path="/forgot-password" element={<ForgotPassword onBack={() => navigate('/login')} onLoginClick={() => navigate('/login')} />} />
+      
+      <Route path="/reset-password" element={<ResetPassword onBack={() => navigate('/login')} />} />
       
       <Route path="/auth/callback" element={<AuthCallback />} />
       

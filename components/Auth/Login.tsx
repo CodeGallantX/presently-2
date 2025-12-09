@@ -4,6 +4,7 @@ import { Input } from '../Input';
 import { Logo } from '../Logo';
 import { UserRole } from '../../types';
 import { Mail, Lock, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { signInWithEmail, signInWithGoogle } from '../../services/supabase/auth';
 
 interface LoginProps {
@@ -14,6 +15,7 @@ interface LoginProps {
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, userId }) => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -96,7 +98,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin, onRegisterClick, onBack, 
                     <input type="checkbox" className="rounded border-zinc-800 bg-zinc-900 text-primary focus:ring-primary" />
                     Remember me
                 </label>
-                <a href="#" className="text-primary hover:underline">Forgot password?</a>
+                <button
+                  type="button"
+                  onClick={() => navigate('/forgot-password')}
+                  className="text-primary hover:underline"
+                >
+                  Forgot password?
+                </button>
             </div>
 
             <Button type="submit" className="w-full" size="lg" isLoading={loading}>

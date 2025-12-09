@@ -299,3 +299,47 @@ export async function getCurrentUserProfile() {
     return null;
   }
 }
+
+// Request password reset
+export async function requestPasswordReset(email: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { 
+      success: false, 
+      error: 'Supabase is not configured. Please set up your environment variables.' 
+    };
+  }
+
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Password reset request error:', error);
+    return { success: false, error: error.message || 'Failed to send reset email' };
+  }
+}
+
+// Reset password with token
+export async function resetPassword(password: string): Promise<{ success: boolean; error?: string }> {
+  if (!isSupabaseConfigured() || !supabase) {
+    return { 
+      success: false, 
+      error: 'Supabase is not configured. Please set up your environment variables.' 
+    };
+  }
+
+  try {
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) throw error;
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Password update error:', error);
+    return { success: false, error: error.message || 'Failed to update password' };
+  }
+}

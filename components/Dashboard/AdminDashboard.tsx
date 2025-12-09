@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Users, Map as MapIcon, ShieldAlert, Activity, Search, MapPin, Settings, Plus, Edit2, Trash2, CheckCircle, XCircle, FileText, Filter, AlertTriangle, Info, Clock, Download, X, Layers, CreditCard } from 'lucide-react';
+import { Users, Map as MapIcon, ShieldAlert, Activity, Search, MapPin, Settings, Plus, Edit2, Trash2, CheckCircle, XCircle, FileText, Filter, AlertTriangle, Info, Clock, Download, X, Layers, CreditCard, Building2 } from 'lucide-react';
 import { Button } from '../Button';
 import { Input } from '../Input';
 import { Switch } from '../Switch';
+import InstitutionManagement from '../Admin/InstitutionManagement';
 import Map, { Marker, NavigationControl, FullscreenControl, ScaleControl, GeolocateControl, Source, Layer, MapRef } from 'react-map-gl';
 import * as maplibregl from 'maplibre-gl';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from 'recharts';
@@ -313,7 +314,12 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ userName, view =
 
   // --- Render Views ---
 
-  // 1. User Management View
+  // 1. Institution Management View
+  if (view === 'institutions') {
+    return <InstitutionManagement />;
+  }
+
+  // 2. User Management View
   if (view === 'users') {
       return (
           <div className="space-y-6 animate-in fade-in">
